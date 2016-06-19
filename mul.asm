@@ -50,9 +50,10 @@ mul_long_long:
                 mov             rbx, [rdx]
                 lea             rdx, [rdx - 8]
                 call            mul_long_short
-                mov             rbx, 256
+                mov             rbx, 4294967296
                 mov             rdi, r9
                 call            mul_long_short
+                call			mul_long_short
                 call            add_long_long
                 mov             rdi, rsi
                 mov             rsi, r8
