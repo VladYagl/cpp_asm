@@ -37,10 +37,11 @@ size_t dummy_count(std::string &str) {
 size_t asm_count(std::string &input) {
     const char *str = input.c_str();
     size_t size = input.size();
-    size_t pos = 1;
+    size_t pos = 0;
     size_t ans = 0;
 
-    bool new_word = (str[0] == ' ');
+    bool first = str[0] == ' ';
+    bool new_word = false;
     for (; (reinterpret_cast<size_t>(str) + pos) % 16 != 0 && pos < size; pos++) {
         if (str[pos] == ' ') {
             new_word = true;
@@ -88,7 +89,7 @@ size_t asm_count(std::string &input) {
         ans += __builtin_popcount(a);
     }
 
-    new_word = (str[0] == ' ');
+    new_word = first;
     for (; pos < size; pos++) {
         if (str[pos] == ' ') {
             new_word = true;
@@ -111,8 +112,8 @@ int main() {
 
         size_t correct_ans = 0;
         bool new_word = true;
-        size_t N = 1e8;
-        /* verbose = true; */
+        size_t N = 64;
+//        verbose = true;
         char *str = new char[N];
 
         for (size_t i = 0; i < N; i++) {
