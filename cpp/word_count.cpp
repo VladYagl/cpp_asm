@@ -9,9 +9,9 @@
 
 bool verbose = false;
 
-void check(size_t (*word_count)(std::string &), std::string &test_str, size_t correct_ans) {
+void check(size_t (*word_count)(const char*, size_t), const char* str, size_t size, size_t correct_ans) {
     auto start = std::clock();
-    size_t ans = word_count(test_str);
+    size_t ans = word_count(str, size);
     std::cout << (double) (std::clock() - start) / CLOCKS_PER_SEC << std::endl;
     if (ans != correct_ans) {
         std::cout << "They are different ¯\\_(ツ)_/¯ " << ans << ' ' << correct_ans << std::endl;
@@ -19,11 +19,11 @@ void check(size_t (*word_count)(std::string &), std::string &test_str, size_t co
     }
 }
 
-size_t dummy_count(std::string &str) {
+size_t dummy_count(const char *str, size_t size) {
     bool new_word = true;
     size_t ans = 0;
-    for (auto i : str) {
-        if (i == ' ') {
+    for (int i = 0; i < size; i++) {
+        if (str[i] == ' ') {
             new_word = true;
         } else {
             ans += new_word;
@@ -34,9 +34,7 @@ size_t dummy_count(std::string &str) {
     return ans;
 }
 
-size_t asm_count(std::string &input) {
-    const char *str = input.c_str();
-    size_t size = input.size();
+size_t asm_count(const char *str, size_t size) {
     size_t pos = 0;
     size_t ans = 0;
 
@@ -90,7 +88,7 @@ size_t asm_count(std::string &input) {
         ans += __builtin_popcount(a);
     }
 
-    new_word = str[first] == ' ';
+    new_word = false;
     for (; pos < size; pos++) {
         if (str[pos] == ' ') {
             new_word = true;
@@ -100,10 +98,15 @@ size_t asm_count(std::string &input) {
         }
     }
 
-    return ans + (str[0] != ' ');
+    return ans + (str[first] != ' ' && (first == 0 || str[first - 1] == ' '));
 }
 
 int main() {
+
+//    std::cout << asm_count(" 888888 888888888888888888888888") << std::endl;
+//    std::cout << dummy_count(" 888888 888888888888888888888888") << std::endl;
+//
+//    return 0;
 
     time_t seed = time(nullptr);
     /* size_t seed = 1539869177; */
@@ -112,35 +115,31 @@ int main() {
         srand(seed++);
 
         size_t correct_ans = 0;
-        bool new_word = true;
-        size_t N = 64;
+        size_t N = 1;
+        size_t shift = rand() % 16;
 //        verbose = true;
-        char *str = new char[N];
+        char *str = new char[N + shift];
+        str += shift;
 
         for (size_t i = 0; i < N; i++) {
-            str[i] = (char) (rand() % 20 + 'a');
-            correct_ans += new_word;
-            new_word = false;
-            if (rand() % 13 == 0) {
-                size_t space = rand() % 15 + 1;
-                for (size_t j = 1; j <= space && i + j < N; j++) {
-                    str[i + j] = ' ';
-                }
-                i += space;
-                new_word = true;
+            if (rand() % 20 > 10) {
+                str[i] = (char) (rand() % 20 + 'a');
+            } else {
+                str[i] = ' ';
             }
         }
 
         std::string test_str = std::string(str);
+        correct_ans = dummy_count(str, N);
         if (verbose) {
             std::cout << test_str << "|$$$| " << correct_ans << std::endl;
         }
 
         std::cout << "dummy count" << std::endl;
-        check(dummy_count, test_str, correct_ans);
+        check(dummy_count, str, N, correct_ans);
 
         std::cout << "asm count" << std::endl;
-        check(asm_count, test_str, correct_ans);
+        check(asm_count, str, N, correct_ans);
 
         std::cout << std::endl;
     }
