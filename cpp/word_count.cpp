@@ -48,6 +48,8 @@ size_t asm_count(const char *str, size_t size) {
         }
     }
 
+    if (pos == size) return ans;
+
     __m128i space_mask = _mm_set_epi8(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
     __m128i curr, next;
 
@@ -115,7 +117,7 @@ int main() {
         srand(seed++);
 
         size_t correct_ans = 0;
-        size_t N = 1;
+        size_t N = 128;
         size_t shift = rand() % 16;
 //        verbose = true;
         char *str = new char[N + shift];
