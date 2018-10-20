@@ -11,9 +11,9 @@ add_executable(word_count
 
 add_executable(memcpy
         memcpy.cpp
-        other.h
         )
 
 add_executable(trampoline
+        trampoline.h
         trampoline_test.cpp
         )

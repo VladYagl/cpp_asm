@@ -131,20 +131,20 @@ public:
             std::cout << "stack size: " << stack_size << std::endl;
 
             // store ret addr
-            add("\x4c\x8b\x1c\x24");                     //move r11 [rsp]
+            add("\x4c\x8b\x1c\x24");                     // move r11 [rsp]
             // shift regs
             for (int i = REGISTERS - 1; i >= 0; i--)
                 add(shifts[i]);
 
             // prep stack
-            add("\x48\x89\xe0");                         //mov rax,[rsp]
-            add("\x48\x05", stack_size);                 //add rax [stack_size + 8]
-            add("\x48\x81\xc4", BYTE);                   //add rsp 8
+            add("\x48\x89\xe0");                         // mov rax,[rsp]
+            add("\x48\x05", stack_size);                 // add rax [stack_size + 8]
+            add("\x48\x81\xc4", BYTE);                   // add rsp 8
 
             char *label_1 = code;
 
-            add("\x48\x39\xe0");                         //cmp rax rsp
-            add("\x74");                                 //je
+            add("\x48\x39\xe0");                         // cmp rax rsp
+            add("\x74");                                 // je
 
             char *label_2 = code;
             code++;
@@ -160,11 +160,11 @@ public:
             *label_2 = code - label_2 - 1;
 
             // shift args
-            add("\x4c\x89\x1c\x24");                     //mov [rsp], r11
-            add("\x48\x81\xec", stack_size);             //sub rsp, stack_size
-            add("\x48\xbf", this->func);                 //mov rdi, func
-            add("\x48\xb8", (void *) &caller<F>);        //mov rax, call addr
-            add("\xff\xd0");                             //call rax
+            add("\x4c\x89\x1c\x24");                     // mov [rsp], r11
+            add("\x48\x81\xec", stack_size);             // sub rsp, stack_size
+            add("\x48\xbf", this->func);                 // mov rdi, func
+            add("\x48\xb8", (void *) &caller<F>);        // mov rax, call addr
+            add("\xff\xd0");                             // call rax
 
             // do call
             add("\x41\x59");                             // pop r9

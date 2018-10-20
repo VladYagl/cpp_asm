@@ -37,8 +37,18 @@ size_t dummy_count(std::string &str) {
 size_t asm_count(std::string &input) {
     const char *str = input.c_str();
     size_t size = input.size();
-    size_t pos = 0;
+    size_t pos = 1;
     size_t ans = 0;
+
+    bool new_word = (str[0] == ' ');
+    for (; (reinterpret_cast<size_t>(str) + pos) % 16 != 0 && pos < size; pos++) {
+        if (str[pos] == ' ') {
+            new_word = true;
+        } else {
+            ans += new_word;
+            new_word = false;
+        }
+    }
 
     __m128i space_mask = _mm_set_epi8(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
     __m128i curr, next;
@@ -78,7 +88,7 @@ size_t asm_count(std::string &input) {
         ans += __builtin_popcount(a);
     }
 
-    bool new_word = (str[0] == ' ');
+    new_word = (str[0] == ' ');
     for (; pos < size; pos++) {
         if (str[pos] == ' ') {
             new_word = true;
@@ -101,7 +111,7 @@ int main() {
 
         size_t correct_ans = 0;
         bool new_word = true;
-        size_t N = 5e8;
+        size_t N = 1e8;
         /* verbose = true; */
         char *str = new char[N];
 

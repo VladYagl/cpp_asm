@@ -109,24 +109,6 @@ void test_loads_of_doubles() {
     cout << foo2(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9) << endl;
 }
 
-void test_loads_of_both() {
-    trampoline<const char *(double, double, double, float, double, double, double, float, float, int, int, int, int,
-                            int, int, int, int, int)> tramp(
-            [&](double c1, double c2, double c3, float c4, double c5, double c6, double c7, float c8, float c9, int c10,
-                int c11, int c12, int c13, int c14, int c15, int c16, int c17, int c18) {
-                char *text = new char[100];
-                sprintf(text, "%.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f %0.2f -- %d %d %d %d %d %d %d %d", c1, c2,
-                        c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14 + c15, c16, c17, c18);
-                return text;
-            }
-    );
-
-    auto foo = tramp.get();
-    auto foo2 = tramp.get();
-    cout << foo(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6, 7, 8, 9) << endl;
-    cout << foo2(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6, 7, 8, 9) << endl;
-}
-
 struct func {
     int x = 10;
 
@@ -161,6 +143,13 @@ void spam_new_traps() {
 //        cout << (void*) foo2 << ' ';
 //        cout << (void**) foo2 << ' ';
 //        cout << *(void**) foo2 << endl;
+
+//        auto f = func(i);
+//        int (*ptr)() = f;
+
+//        int (*ptr)() = [&]() {
+//            return f();
+//        };
     }
 
     assert(sum == 1106328 * 2 + 1488);
@@ -208,8 +197,6 @@ int main() {
     cout << "\n4\n";
     test_loads_of_doubles();
     cout << "\n5\n";
-    test_loads_of_both();
-    cout << "\n6\n";
     auto start = clock();
     spam_new_traps();
     cout << "TIME : " << (double) (clock() - start) / CLOCKS_PER_SEC << endl;

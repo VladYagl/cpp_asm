@@ -29,7 +29,7 @@ void *memcpy_asm(void *dest, const void *src, size_t count) {
     for (; pos + 16 < count; pos += 16) {
         __m128i tmp;
         __asm__ volatile (
-        "movdqu (%1, %3), %0;"
+        "movdqa (%1, %3), %0;"
         "movntdq %0, (%2, %3);"
         : "=x"(tmp)
         : "r"(dest), "r"(src), "r"(pos)
