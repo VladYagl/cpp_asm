@@ -85,26 +85,26 @@ private:
     };
 
     void *func;
-
     void (*deleter)(void *);
 
     void *addr;
+    char *code;
 
-    void add(char *&p, const char *command) {
+    void add(const char *command) {
         for (const char *i = command; *i; i++)
-            *(p++) = *i;
+            *(code++) = *i;
     }
 
-    void add(char *&p, const char *command, int32_t c) {
-        add(p, command);
-        *(int32_t *) p = c;
-        p += BYTE / 2;
+    void add(const char *command, int32_t c) {
+        add(command);
+        *(int32_t *) code = c;
+        code += BYTE / 2;
     }
 
-    void add(char *&p, const char *command, void *c) {
-        add(p, command);
-        *(void **) p = c;
-        p += BYTE;
+    void add(const char *command, void *c) {
+        add(command);
+        *(void **) code = c;
+        code += BYTE;
     }
 
     template<typename F>
@@ -120,80 +120,68 @@ public:
         };
 
         addr = alloc();
+        code = (char *) addr;
 
-        char *pcode = (char *) addr;
         if (args<Args ...>::INT >= REGISTERS) {
-
             std::cout << "using stack" << std::endl;
             std::cout << "float: " << args<Args ...>::FLOAT << std::endl;
             std::cout << "int: " << args<Args ...>::INT << std::endl;
 
             int stack_size = BYTE * (args<Args ...>::INT - REGISTERS + 1 + std::max(args<Args ...>::FLOAT - BYTE, 0));
             std::cout << "stack size: " << stack_size << std::endl;
-            //move r11 [rsp]
-            add(pcode, "\x4c\x8b\x1c\x24");
+
+            // store ret addr
+            add("\x4c\x8b\x1c\x24");                     //move r11 [rsp]
+            // shift regs
             for (int i = REGISTERS - 1; i >= 0; i--)
-                add(pcode, shifts[i]);
+                add(shifts[i]);
 
-            //mov rax,[rsp]
-            add(pcode, "\x48\x89\xe0");
-            //add rax [stack_size + 8]
-            add(pcode, "\x48\x05", stack_size);
-            //add rsp 8
-            add(pcode, "\x48\x81\xc4", BYTE);
+            // prep stack
+            add("\x48\x89\xe0");                         //mov rax,[rsp]
+            add("\x48\x05", stack_size);                 //add rax [stack_size + 8]
+            add("\x48\x81\xc4", BYTE);                   //add rsp 8
 
-            char *label_1 = pcode;
+            char *label_1 = code;
 
-            //cmp rax rsp
-            add(pcode, "\x48\x39\xe0");
-            //je
-            add(pcode, "\x74");
+            add("\x48\x39\xe0");                         //cmp rax rsp
+            add("\x74");                                 //je
 
-            char *label_2 = pcode;
-            pcode++;
+            char *label_2 = code;
+            code++;
 
-            // add rsp 8
-            add(pcode, "\x48\x81\xc4\x08");
-            pcode += 3;
-            // mov rdi [rsp]
-            add(pcode, "\x48\x8b\x3c\x24");
-            // mov [rsp - 8] rdi
-            add(pcode, "\x48\x89\x7c\x24\xf8");
-            // jmp
-            add(pcode, "\xeb");
+            add("\x48\x81\xc4\x08");                     // add rsp 8
+            code += 3;
+            add("\x48\x8b\x3c\x24");                     // mov rdi [rsp]
+            add("\x48\x89\x7c\x24\xf8");                 // mov [rsp - 8] rdi
+            add("\xeb");                                 // jmp
 
-            *pcode = label_1 - pcode - 1;
-            pcode++;
-            *label_2 = pcode - label_2 - 1;
+            *code = label_1 - code - 1;
+            code++;
+            *label_2 = code - label_2 - 1;
 
-            //mov [rsp], r11
-            add(pcode, "\x4c\x89\x1c\x24");
-            //sub rsp, stack_size
-            add(pcode, "\x48\x81\xec", stack_size);
-            //mov rdi, imm
-            add(pcode, "\x48\xbf", this->func);
-            //mov rax, imm
-            add(pcode, "\x48\xb8", (void *) &caller<F>);
-            //call rax
-            add(pcode, "\xff\xd0");
-            // pop r9
-            add(pcode, "\x41\x59");
-            // mov r11 [rsp + stack_size]
-            add(pcode, "\x4c\x8b\x9c\x24", stack_size - BYTE);
-            // mov [rsp] r11
-            add(pcode, "\x4c\x89\x1c\x24\xc3");
+            // shift args
+            add("\x4c\x89\x1c\x24");                     //mov [rsp], r11
+            add("\x48\x81\xec", stack_size);             //sub rsp, stack_size
+            add("\x48\xbf", this->func);                 //mov rdi, func
+            add("\x48\xb8", (void *) &caller<F>);        //mov rax, call addr
+            add("\xff\xd0");                             //call rax
+
+            // do call
+            add("\x41\x59");                             // pop r9
+            add("\x4c\x8b\x9c\x24", stack_size - BYTE);  // mov r11 [rsp + stack_size]
+            add("\x4c\x89\x1c\x24\xc3");                 // mov [rsp] r11
         } else {
 
 //            std::cout << "using registers" << std::endl;
 
             for (int i = args<Args ...>::INT - 1; i >= 0; i--)
-                add(pcode, shifts[i]);
+                add(shifts[i]);
             //mov rdi imm
-            add(pcode, "\x48\xbf", this->func);
+            add("\x48\xbf", this->func);
             //mov rax imm
-            add(pcode, "\x48\xb8", (void *) &caller<F>);
+            add("\x48\xb8", (void *) &caller<F>);
             //mov jmp raxi
-            add(pcode, "\xff\xe0");
+            add("\xff\xe0");
         }
     }
 
