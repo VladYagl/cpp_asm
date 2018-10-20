@@ -40,8 +40,7 @@ size_t asm_count(std::string &input) {
     size_t pos = 0;
     size_t ans = 0;
 
-    bool first = str[0] == ' ';
-    bool new_word = false;
+    bool new_word = true;
     for (; (reinterpret_cast<size_t>(str) + pos) % 16 != 0 && pos < size; pos++) {
         if (str[pos] == ' ') {
             new_word = true;
@@ -53,6 +52,8 @@ size_t asm_count(std::string &input) {
 
     __m128i space_mask = _mm_set_epi8(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
     __m128i curr, next;
+
+    size_t first = pos;
 
     __asm__ volatile(
     "movdqa     (%2), %0\n"    // next = pos
@@ -79,17 +80,17 @@ size_t asm_count(std::string &input) {
         : "memory", "cc"
         );
 
-        if (verbose) {
-            std::cout << "next: " << to_string(next) << std::endl;
-            std::cout << "curr: " << to_string(curr) << std::endl;
-
-            std::cout << "a   : " << to_string(a) << std::endl;
-        }
+//        if (verbose) {
+//            std::cout << "next: " << to_string(next) << std::endl;
+//            std::cout << "curr: " << to_string(curr) << std::endl;
+//
+//            std::cout << "a   : " << to_string(a) << std::endl;
+//        }
 
         ans += __builtin_popcount(a);
     }
 
-    new_word = first;
+    new_word = str[first] == ' ';
     for (; pos < size; pos++) {
         if (str[pos] == ' ') {
             new_word = true;
